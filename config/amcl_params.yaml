@@ -1,0 +1,15 @@
+# Parameters for AMCL
+min_particles: 500
+max_particles: 5000
+kld_err: 0.05
+kld_z: 0.99
+
+# frame IDs
+odom_frame_id: odom
+base_frame_id: base_link
+global_frame_id: map
+
+# update thresholds
+update_min_d: 0.1
+update_min_a: 0.1
+

@@ -1,0 +1,19 @@
+<launch>
+  <arg name="map_dir" default="$(find f1tenth_stack)/maps"/>
+
+  <!-- Publish ชื่อแมพทั้งหมดให้ WebUI -->
+  <node pkg="f1tenth_stack" type="map_list_publisher.py" name="map_list_publisher" output="screen">
+    <param name="map_dir" value="$(arg map_dir)"/>
+  </node>
+
+  <!-- รอรับ /set_map แล้ว spawn navigation.launch -->
+  <node pkg="f1tenth_stack" type="map_handler.py" name="map_handler" output="screen"/>
+
+  <!-- รอรับ /planned_path แล้วส่ง goal ไปให้ move_base -->
+  <node pkg="f1tenth_stack" type="path_handler.py" name="path_handler" output="screen"/>
+
+  <!-- Web interfaces -->
+  <node pkg="rosbridge_server" type="rosbridge_websocket" name="rosbridge_websocket" output="screen"/>
+  <node pkg="web_video_server"   type="web_video_server"   name="web_video_server"   output="screen"/>
+</launch>
+

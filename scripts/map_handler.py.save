@@ -1,0 +1,50 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import os
+import rospy
+import roslaunch
+import rospkg
+from std_msgs.msg import String
+
+class MapHandler:
+    def __init__(self):
+        rospy.init_node('map_handler', anonymous=False)
+        self.rp = rospkg.RosPack()
+        self.runner = None
+
+        rospy.Subscriber('/set_map', String, self.cb)
+        rospy.loginfo("map_handler ready --> listening on /set_map")
+        rospy.spin()
+
+    def cb(self, msg):
+        map_name = msg.data.strip()
+        pkg_path = self.rp.get_path('f1tenth_stack')
+        yaml_file = os.path.join(pkg_path, 'maps', map_name + '.yaml')
+
+        if not os.path.isfile(yaml_file):
+            rospy.logerr("Map not found: {}".format(yaml_file))
+            return
+
+        # ถ้ามี launch เดิม ก็ shutdown ก่อน
+        if self.runner:
+            self.runner.shutdown()
+
+        uuid = roslaunch.rlutil.get_or_generate_uuid(None, False)
+        roslaunch.configure_logging(uuid)
+
+        # เรียก navigation_webui.launch พร้อมส่งพารามิเตอร์ map_file
+        launch_file = os.path.join(pkg_path, 'launch', 'navigation_webui.launch')
+        cli_args    = [launch_file, "map_file:=" + yaml_file]
+        roslaunch_args = rospy.myargv(argv=cli_args)[1:]
+
+        self.runner = roslaunch.parent.ROSLaunchParent(uuid, roslaunch_args)
+        self.runner.start()
+        rospy.loginfo("Launched navigation with map: {}".format(yaml_file))
+
+if __name__ == '__main__':
+    try:
+        MapHandler()
+    except rospy.ROSInterruptException:
+        pass
+
